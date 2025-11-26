@@ -1,0 +1,363 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+    --border-color: #d3d6da;
+    --green: #6aaa64;
+    --yellow: #c9b458;
+    --gray: #787c7e;
+    --light-gray: #d3d6da;
+    --dark-gray: #878a8c;
+    --letter-size: 62px;
+    --key-size: 43px;
+}
+
+body {
+    font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.container {
+    max-width: 500px;
+    width: 100%;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: 0.2rem;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+    font-weight: 400;
+}
+
+.game-area {
+    width: 100%;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--text-color);
+    text-align: center;
+}
+
+.guesses-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 30px;
+}
+
+.guess-row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.letter-box {
+    width: var(--letter-size);
+    height: var(--letter-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 2px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.letter-box.empty {
+    border-color: var(--light-gray);
+    background-color: var(--bg-color);
+}
+
+.letter-box.filled {
+    border-color: var(--text-color);
+    animation: pop 0.1s ease-in-out;
+}
+
+.letter-box.green {
+    background-color: var(--green);
+    border-color: var(--green);
+    color: white;
+    animation: flip 0.6s ease-in-out;
+}
+
+.letter-box.yellow {
+    background-color: var(--yellow);
+    border-color: var(--yellow);
+    color: white;
+    animation: flip 0.6s ease-in-out;
+}
+
+.letter-box.gray {
+    background-color: var(--gray);
+    border-color: var(--gray);
+    color: white;
+    animation: flip 0.6s ease-in-out;
+}
+
+.answer-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border-color);
+}
+
+.input-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.answer-row {
+    display: flex;
+    gap: 6px;
+}
+
+.message {
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 500;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    font-size: 0.95rem;
+}
+
+.message.success {
+    background-color: rgba(106, 170, 100, 0.1);
+    color: var(--green);
+    border: 1px solid var(--green);
+}
+
+.message.error {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.message.info {
+    background-color: rgba(201, 180, 88, 0.1);
+    color: var(--yellow);
+    border: 1px solid var(--yellow);
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.game-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    font-family: inherit;
+}
+
+.submit-btn {
+    background-color: var(--green);
+    color: white;
+    flex: 1;
+    min-width: 100px;
+}
+
+.submit-btn:hover:not(:disabled) {
+    background-color: #5a9a54;
+}
+
+.submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.delete-btn {
+    background-color: var(--gray);
+    color: white;
+    min-width: 80px;
+}
+
+.delete-btn:hover:not(:disabled) {
+    background-color: var(--dark-gray);
+}
+
+.new-puzzle-btn {
+    background-color: var(--light-gray);
+    color: var(--text-color);
+    flex: 1;
+    min-width: 120px;
+}
+
+.new-puzzle-btn:hover {
+    background-color: var(--border-color);
+}
+
+/* Virtual Keyboard */
+.keyboard-container {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border-color);
+}
+
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.key {
+    height: var(--key-size);
+    min-width: var(--key-size);
+    padding: 0 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--light-gray);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-transform: uppercase;
+}
+
+.key:hover {
+    background-color: var(--border-color);
+}
+
+.key:active {
+    transform: scale(0.95);
+}
+
+.key.used-green {
+    background-color: var(--green);
+    color: white;
+}
+
+.key.used-yellow {
+    background-color: var(--yellow);
+    color: white;
+}
+
+.key.used-gray {
+    background-color: var(--gray);
+    color: white;
+}
+
+/* Animations */
+@keyframes pop {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes flip {
+    0% {
+        transform: rotateX(0);
+    }
+    50% {
+        transform: rotateX(-90deg);
+    }
+    100% {
+        transform: rotateX(0);
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-10px);
+    }
+    75% {
+        transform: translateX(10px);
+    }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    font-size: 1rem;
+    color: var(--dark-gray);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    :root {
+        --letter-size: 50px;
+        --key-size: 38px;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .letter-box {
+        font-size: 1.5rem;
+    }
+    
+    .key {
+        font-size: 0.75rem;
+        padding: 0 10px;
+        min-width: calc(var(--key-size) - 4px);
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .game-btn {
+        width: 100%;
+    }
+}

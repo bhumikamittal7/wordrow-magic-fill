@@ -1,0 +1,11 @@
+puzzle_id,answer,guess_1,guess_1_constraints,guess_2,guess_2_constraints,guess_3,guess_3_constraints,guess_4,guess_4_constraints,candidates_remaining
+1,liras,lares,G-Y-G-X-G,canes,X-Y-X-X-G,tares,X-Y-G-X-G,mares,X-Y-G-X-G,1
+2,lunas,lanes,G-Y-G-X-G,cares,X-Y-X-X-G,tares,X-Y-X-X-G,mares,X-Y-X-X-G,1
+3,saids,sades,G-G-Y-X-G,saris,G-G-X-Y-G,sales,G-G-X-X-G,sanes,G-G-X-X-G,1
+4,metze,mazes,G-X-Y-Y-X,cares,X-X-X-Y-X,sales,X-X-X-Y-X,sanes,X-X-X-Y-X,1
+5,mauts,mutes,G-Y-Y-X-G,fares,X-G-X-X-G,cares,X-G-X-X-G,bares,X-G-X-X-G,1
+6,wears,wares,G-Y-Y-Y-G,canes,X-Y-X-Y-G,tales,X-Y-X-Y-G,mares,X-Y-Y-Y-G,1
+7,wands,wades,G-G-Y-X-G,bares,X-G-X-X-G,manes,X-G-G-X-G,pales,X-G-X-X-G,1
+8,doses,sades,Y-X-Y-G-G,cares,X-X-X-G-G,sales,Y-X-X-G-G,sanes,Y-X-X-G-G,1
+9,plies,pales,G-X-Y-G-G,cares,X-X-X-G-G,manes,X-X-X-G-G,tares,X-X-X-G-G,1
+10,yarke,sakes,X-G-Y-Y-X,cares,X-G-G-Y-X,sales,X-G-X-Y-X,sanes,X-G-X-Y-X,1

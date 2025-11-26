@@ -1,0 +1,4 @@
+# Requirements for Netlify Functions
+# Note: Netlify Functions use Python 3.9 runtime
+# Standard library modules are available, no external dependencies needed for puzzle_generator
+

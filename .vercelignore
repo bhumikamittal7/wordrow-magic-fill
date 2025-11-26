@@ -1,12 +1,12 @@
-# Files to ignore during Netlify deployment
+# Files to ignore during Vercel deployment
 generate_puzzle_csv.py
 generate_wordlist.py
 puzzles.csv
-server.py
 *.pyc
 __pycache__/
 .pytest_cache/
 venv/
 env/
 *.log
+.netlify/
 

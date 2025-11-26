@@ -11,8 +11,6 @@ A constraint-based word puzzle game where players use 4 words with Wordle-style 
 
 ## Algorithm Improvements
 
-Based on insights from [A Mathematician's Guide to Wordle](https://aperiodical.com/2022/02/a-mathematicians-guide-to-wordle/):
-
 1. **Letter Frequency Analysis**: Uses Wordle answer letter frequencies (e:53%, a:42%, r:39%, etc.) instead of general English frequencies
 2. **Position-Specific Frequencies**: Considers which letters are more common at each position
 3. **Optimized Constraint Satisfaction**: Fast filtering with early termination
@@ -70,8 +68,3 @@ for guess_data in puzzle['constraints']:
 - `static/` - Frontend files (HTML, CSS, JS)
 - `wordlist.txt` - Dictionary of 5-letter words
 - `generate_wordlist.py` - Script to generate/update word list
-
-## References
-
-- [A Mathematician's Guide to Wordle](https://aperiodical.com/2022/02/a-mathematicians-guide-to-wordle/) - Mathematical insights on Wordle strategy
-

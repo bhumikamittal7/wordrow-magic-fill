@@ -111,13 +111,21 @@ async function loadPuzzle() {
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: 'Server error' }));
-            throw new Error(errorData.error || `Server error: ${response.status}`);
+            const errorMessage = errorData.error || `Server error: ${response.status}`;
+            
+            // Show error message and disable buttons
+            showMessage(errorMessage, 'error');
+            submitBtn.disabled = true;
+            deleteBtn.disabled = true;
+            return;
         }
         
         const data = await response.json();
         
         if (data.error) {
             showMessage(data.error, 'error');
+            submitBtn.disabled = true;
+            deleteBtn.disabled = true;
             return;
         }
         

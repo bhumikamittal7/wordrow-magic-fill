@@ -8,16 +8,16 @@ import json
 from puzzle_generator import PuzzleGenerator
 import argparse
 
-def generate_puzzles_csv(output_file='puzzles.csv', num_puzzles=100, use_curated=True):
+def generate_puzzles_csv(output_file='puzzles.csv', num_puzzles=30, use_curated=False):
     """
     Generate multiple puzzles and save to CSV.
     
     Args:
         output_file: Output CSV file path
         num_puzzles: Number of puzzles to generate
-        use_curated: Whether to use curated word subset
+        use_curated: Whether to use curated word subset (False = use full list)
     """
-    print(f"Initializing puzzle generator...")
+    print(f"Initializing puzzle generator with {'curated' if use_curated else 'full'} word list...")
     generator = PuzzleGenerator(use_curated=use_curated, curated_size=2000)
     
     print(f"Generating {num_puzzles} puzzles...")
@@ -30,19 +30,17 @@ def generate_puzzles_csv(output_file='puzzles.csv', num_puzzles=100, use_curated
         try:
             puzzle = generator.generate_puzzle(max_attempts=500)
             
-            # Format puzzle data
+            # Format puzzle data - store constraints as JSON for easier parsing
             puzzle_data = {
                 'puzzle_id': i + 1,
                 'answer': puzzle['answer'],
-                'guess_1': puzzle['guesses'][0] if len(puzzle['guesses']) > 0 else '',
-                'guess_1_constraints': format_constraints(puzzle['constraints'][0]['constraints']) if len(puzzle['constraints']) > 0 else '',
-                'guess_2': puzzle['guesses'][1] if len(puzzle['guesses']) > 1 else '',
-                'guess_2_constraints': format_constraints(puzzle['constraints'][1]['constraints']) if len(puzzle['constraints']) > 1 else '',
-                'guess_3': puzzle['guesses'][2] if len(puzzle['guesses']) > 2 else '',
-                'guess_3_constraints': format_constraints(puzzle['constraints'][2]['constraints']) if len(puzzle['constraints']) > 2 else '',
-                'guess_4': puzzle['guesses'][3] if len(puzzle['guesses']) > 3 else '',
-                'guess_4_constraints': format_constraints(puzzle['constraints'][3]['constraints']) if len(puzzle['constraints']) > 3 else '',
-                'candidates_remaining': puzzle.get('candidates_remaining', 1)
+                'guesses_json': json.dumps([
+                    {
+                        'word': puzzle['guesses'][j] if j < len(puzzle['guesses']) else '',
+                        'constraints': puzzle['constraints'][j]['constraints'] if j < len(puzzle['constraints']) else []
+                    }
+                    for j in range(4)
+                ])
             }
             
             puzzles.append(puzzle_data)
@@ -57,11 +55,7 @@ def generate_puzzles_csv(output_file='puzzles.csv', num_puzzles=100, use_curated
     fieldnames = [
         'puzzle_id',
         'answer',
-        'guess_1', 'guess_1_constraints',
-        'guess_2', 'guess_2_constraints',
-        'guess_3', 'guess_3_constraints',
-        'guess_4', 'guess_4_constraints',
-        'candidates_remaining'
+        'guesses_json'
     ]
     
     with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
@@ -73,13 +67,10 @@ def generate_puzzles_csv(output_file='puzzles.csv', num_puzzles=100, use_curated
     
     # Print summary
     unique_answers = len(set(p['answer'] for p in puzzles))
-    perfect_puzzles = sum(1 for p in puzzles if p['candidates_remaining'] == 1)
     
     print(f"\nSummary:")
     print(f"  Total puzzles: {len(puzzles)}")
     print(f"  Unique answers: {unique_answers}")
-    print(f"  Perfect puzzles (unique solution): {perfect_puzzles}")
-    print(f"  Puzzles with multiple candidates: {len(puzzles) - perfect_puzzles}")
 
 
 def format_constraints(constraints):
@@ -107,19 +98,19 @@ def format_constraints(constraints):
 
 def main():
     parser = argparse.ArgumentParser(description='Generate word puzzle CSV file')
-    parser.add_argument('-n', '--num', type=int, default=100,
-                       help='Number of puzzles to generate (default: 100)')
+    parser.add_argument('-n', '--num', type=int, default=30,
+                       help='Number of puzzles to generate (default: 30)')
     parser.add_argument('-o', '--output', type=str, default='puzzles.csv',
                        help='Output CSV file path (default: puzzles.csv)')
-    parser.add_argument('--full-list', action='store_true',
-                       help='Use full word list instead of curated subset (slower)')
+    parser.add_argument('--curated', action='store_true',
+                       help='Use curated word subset instead of full list (faster but less comprehensive)')
     
     args = parser.parse_args()
     
     generate_puzzles_csv(
         output_file=args.output,
         num_puzzles=args.num,
-        use_curated=not args.full_list
+        use_curated=args.curated
     )
 
 

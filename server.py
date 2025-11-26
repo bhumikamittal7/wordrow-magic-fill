@@ -5,22 +5,78 @@ Web server for the constraint-based word puzzle game.
 
 from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
-from puzzle_generator import PuzzleGenerator
 import random
 import uuid
+import csv
+import json
+import os
 from datetime import datetime, timedelta
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = 'your-secret-key-change-in-production'  # Change this in production
 CORS(app)
 
-# Initialize puzzle generator with curated subset for faster generation
-# Set use_curated=False to use full word list (slower but more comprehensive)
-generator = PuzzleGenerator(use_curated=True, curated_size=2000)
+# Load puzzles from CSV file
+PUZZLES_CSV = 'puzzles.csv'
+puzzles_db = []
+
+def load_puzzles_from_csv():
+    """Load puzzles from CSV file."""
+    global puzzles_db
+    puzzles_db = []
+    
+    if not os.path.exists(PUZZLES_CSV):
+        app.logger.warning(f"Puzzles CSV file '{PUZZLES_CSV}' not found. Run generate_puzzle_csv.py first.")
+        return
+    
+    try:
+        with open(PUZZLES_CSV, 'r', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                puzzle_id = int(row['puzzle_id'])
+                answer = row['answer']
+                guesses_data = json.loads(row['guesses_json'])
+                
+                puzzles_db.append({
+                    'puzzle_id': puzzle_id,
+                    'answer': answer,
+                    'guesses': guesses_data
+                })
+        
+        app.logger.info(f"Loaded {len(puzzles_db)} puzzles from {PUZZLES_CSV}")
+    except Exception as e:
+        app.logger.error(f"Error loading puzzles from CSV: {e}")
+        puzzles_db = []
+
+# Load puzzles on startup
+load_puzzles_from_csv()
+
+# Load word list for validation
+word_set = set()
+def load_word_list():
+    """Load word list for validation."""
+    global word_set
+    wordlist_path = 'wordlist.txt'
+    if os.path.exists(wordlist_path):
+        try:
+            with open(wordlist_path, 'r', encoding='utf-8') as f:
+                word_set = {line.strip().lower() for line in f if line.strip()}
+            app.logger.info(f"Loaded {len(word_set)} words for validation")
+        except Exception as e:
+            app.logger.error(f"Error loading word list: {e}")
+            word_set = set()
+    else:
+        app.logger.warning(f"Word list file '{wordlist_path}' not found. Word validation disabled.")
+
+load_word_list()
 
 # Store active puzzles (in production, use Redis or database)
 # Format: {puzzle_id: {'answer': str, 'created_at': datetime, 'guesses': list}}
 active_puzzles = {}
+
+# Track which puzzles from the database have been served
+# This ensures we don't repeat puzzles until all are exhausted
+served_puzzle_ids = set()
 
 @app.route('/')
 def index():
@@ -39,14 +95,31 @@ def serve_js():
 
 @app.route('/api/puzzle', methods=['GET'])
 def get_puzzle():
-    """Generate and return a new puzzle."""
+    """Load and return a random puzzle from CSV, prioritizing unserved puzzles."""
     try:
-        # Optionally accept answer parameter
-        answer = None
-        # For now, generate random puzzle
-        puzzle = generator.generate_puzzle(answer=answer, max_attempts=500)
+        if not puzzles_db:
+            return jsonify({'error': 'No puzzles available. Please generate puzzles first.'}), 500
         
-        # Generate unique puzzle ID
+        # Get all puzzle database IDs
+        all_puzzle_ids = {p['puzzle_id'] for p in puzzles_db}
+        
+        # Find unserved puzzles
+        unserved_ids = all_puzzle_ids - served_puzzle_ids
+        
+        # If all puzzles have been served, return a message
+        if not unserved_ids:
+            return jsonify({
+                'error': 'No new puzzle available at the moment. All puzzles have been served. Please try again later.'
+            }), 503  # 503 Service Unavailable
+        
+        # Select a random puzzle from unserved puzzles
+        selected_db_id = random.choice(list(unserved_ids))
+        puzzle = next(p for p in puzzles_db if p['puzzle_id'] == selected_db_id)
+        
+        # Mark this puzzle as served
+        served_puzzle_ids.add(selected_db_id)
+        
+        # Generate unique puzzle ID for this session
         puzzle_id = str(uuid.uuid4())
         
         # Store puzzle answer server-side (don't trust client)
@@ -65,7 +138,8 @@ def get_puzzle():
             'guesses': []
         }
         
-        for guess_data in puzzle['constraints']:
+        # Convert guesses data to frontend format
+        for guess_data in puzzle['guesses']:
             word = guess_data['word']
             constraints = guess_data['constraints']
             
@@ -83,8 +157,8 @@ def get_puzzle():
         
         return jsonify(response)
     except Exception as e:
-        app.logger.error(f"Error generating puzzle: {e}")
-        return jsonify({'error': 'Failed to generate puzzle. Please try again.'}), 500
+        app.logger.error(f"Error loading puzzle: {e}")
+        return jsonify({'error': 'Failed to load puzzle. Please try again.'}), 500
 
 @app.route('/api/check', methods=['POST'])
 def check_answer():
@@ -108,7 +182,7 @@ def check_answer():
             return jsonify({'correct': False, 'message': 'Guess must be exactly 5 letters'}), 400
         
         # Validate word is in dictionary
-        if guess not in generator.word_set:
+        if word_set and guess not in word_set:
             return jsonify({'correct': False, 'message': f'"{guess.upper()}" is not a valid word'}), 400
         
         # Get answer from server-side storage (don't trust client)

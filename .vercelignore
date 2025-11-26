@@ -1,7 +1,7 @@
 # Files to ignore during Vercel deployment
 generate_puzzle_csv.py
 generate_wordlist.py
-puzzles.csv
+# Note: puzzles.csv is NOT ignored - it's needed for the app to work!
 *.pyc
 __pycache__/
 .pytest_cache/

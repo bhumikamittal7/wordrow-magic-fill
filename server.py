@@ -74,10 +74,6 @@ load_word_list()
 # Format: {puzzle_id: {'answer': str, 'created_at': datetime, 'guesses': list}}
 active_puzzles = {}
 
-# Track which puzzles from the database have been served
-# This ensures we don't repeat puzzles until all are exhausted
-served_puzzle_ids = set()
-
 @app.route('/')
 def index():
     """Serve the main page."""
@@ -95,18 +91,29 @@ def serve_js():
 
 @app.route('/api/puzzle', methods=['GET'])
 def get_puzzle():
-    """Load and return a random puzzle from CSV, prioritizing unserved puzzles."""
+    """Load and return a random puzzle from CSV, excluding user's already-served puzzles."""
     try:
         if not puzzles_db:
             return jsonify({'error': 'No puzzles available. Please generate puzzles first.'}), 500
         
+        # Get user's served puzzle IDs from query parameter (sent from localStorage)
+        served_by_user = set()
+        served_param = request.args.get('served', '')
+        if served_param:
+            try:
+                served_list = json.loads(served_param)
+                served_by_user = {int(pid) for pid in served_list if str(pid).isdigit()}
+            except (json.JSONDecodeError, ValueError):
+                # Invalid format, treat as empty
+                pass
+        
         # Get all puzzle database IDs
         all_puzzle_ids = {p['puzzle_id'] for p in puzzles_db}
         
-        # Find unserved puzzles
-        unserved_ids = all_puzzle_ids - served_puzzle_ids
+        # Find puzzles not yet served to this user
+        unserved_ids = all_puzzle_ids - served_by_user
         
-        # If all puzzles have been served, return a message
+        # If all puzzles have been served to this user, return a message
         if not unserved_ids:
             return jsonify({
                 'error': 'No new puzzle available at the moment. All puzzles have been served. Please try again later.'
@@ -115,9 +122,6 @@ def get_puzzle():
         # Select a random puzzle from unserved puzzles
         selected_db_id = random.choice(list(unserved_ids))
         puzzle = next(p for p in puzzles_db if p['puzzle_id'] == selected_db_id)
-        
-        # Mark this puzzle as served
-        served_puzzle_ids.add(selected_db_id)
         
         # Generate unique puzzle ID for this session
         puzzle_id = str(uuid.uuid4())
@@ -135,6 +139,7 @@ def get_puzzle():
         # Format for frontend
         response = {
             'puzzle_id': puzzle_id,
+            'puzzle_db_id': selected_db_id,  # Include database ID so client can track it
             'guesses': []
         }
         

@@ -4,6 +4,44 @@ let puzzleId = null;
 let currentGuess = '';
 let letterStates = {}; // Track letter states for keyboard coloring
 
+// LocalStorage keys
+const STORAGE_KEY_SERVED_PUZZLES = 'wordrow_served_puzzles';
+
+// Get served puzzle IDs from localStorage
+function getServedPuzzleIds() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY_SERVED_PUZZLES);
+        if (stored) {
+            return JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error('Error reading served puzzles from localStorage:', e);
+    }
+    return [];
+}
+
+// Add a puzzle ID to served puzzles in localStorage
+function markPuzzleAsServed(puzzleDbId) {
+    try {
+        const served = getServedPuzzleIds();
+        if (!served.includes(puzzleDbId)) {
+            served.push(puzzleDbId);
+            localStorage.setItem(STORAGE_KEY_SERVED_PUZZLES, JSON.stringify(served));
+        }
+    } catch (e) {
+        console.error('Error saving served puzzle to localStorage:', e);
+    }
+}
+
+// Clear served puzzles (for testing or reset)
+function clearServedPuzzles() {
+    try {
+        localStorage.removeItem(STORAGE_KEY_SERVED_PUZZLES);
+    } catch (e) {
+        console.error('Error clearing served puzzles:', e);
+    }
+}
+
 // DOM elements
 const guessesContainer = document.getElementById('guesses-container');
 const answerRow = document.getElementById('answer-row');
@@ -107,7 +145,20 @@ async function loadPuzzle() {
         deleteBtn.disabled = true;
         resetKeyboard();
         
-        const response = await fetch('/api/puzzle');
+        // Get user's served puzzle IDs from localStorage
+        const servedPuzzleIds = getServedPuzzleIds();
+        
+        // Build query parameter with served puzzle IDs
+        const queryParams = new URLSearchParams();
+        if (servedPuzzleIds.length > 0) {
+            queryParams.append('served', JSON.stringify(servedPuzzleIds));
+        }
+        
+        const url = queryParams.toString() 
+            ? `/api/puzzle?${queryParams.toString()}`
+            : '/api/puzzle';
+        
+        const response = await fetch(url);
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: 'Server error' }));
@@ -138,6 +189,11 @@ async function loadPuzzle() {
         
         if (!data.guesses || data.guesses.length === 0) {
             throw new Error('No guesses received from server');
+        }
+        
+        // Mark this puzzle as served in localStorage
+        if (data.puzzle_db_id) {
+            markPuzzleAsServed(data.puzzle_db_id);
         }
         
         renderGuesses(data.guesses);

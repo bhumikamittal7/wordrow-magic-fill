@@ -1,4 +1,4 @@
-# Better Wordrow - Constraint-Based Word Puzzle Game
+# CrackSAT - Constraint-Based Word Puzzle Game
 
 A constraint-based word puzzle game where players use 4 words with Wordle-style constraints (green/yellow/gray) to deduce the answer word.
 

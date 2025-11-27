@@ -5,7 +5,7 @@ let currentGuess = '';
 let letterStates = {}; // Track letter states for keyboard coloring
 
 // LocalStorage keys
-const STORAGE_KEY_SERVED_PUZZLES = 'wordrow_served_puzzles';
+const STORAGE_KEY_SERVED_PUZZLES = 'cracksat_served_puzzles';
 
 // Get served puzzle IDs from localStorage
 function getServedPuzzleIds() {
@@ -370,5 +370,5 @@ function clearMessage() {
 }
 
 function showLoading() {
-    guessesContainer.innerHTML = '<div class="loading">Generating puzzle...</div>';
+    guessesContainer.innerHTML = '<div class="loading">riddle fiddle dee dee...</div>';
 }

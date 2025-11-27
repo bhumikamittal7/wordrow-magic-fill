@@ -3,6 +3,7 @@ let currentPuzzle = null;
 let puzzleId = null;
 let currentGuess = '';
 let letterStates = {}; // Track letter states for keyboard coloring
+let autoLoadTimeout = null; // Timeout for auto-loading next puzzle
 
 // LocalStorage keys
 const STORAGE_KEY_SERVED_PUZZLES = 'cracksat_served_puzzles';
@@ -59,6 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.addEventListener('click', handleSubmit);
     deleteBtn.addEventListener('click', handleDelete);
     newPuzzleBtn.addEventListener('click', () => {
+        // Clear any pending auto-load timeout
+        if (autoLoadTimeout) {
+            clearTimeout(autoLoadTimeout);
+            autoLoadTimeout = null;
+        }
         if (confirm('Start a new puzzle? Your current progress will be lost.')) {
             loadPuzzle();
         }
@@ -126,8 +132,14 @@ function updateAnswerRow() {
     submitBtn.disabled = currentGuess.length !== 5;
 }
 
-async function loadPuzzle() {
+async function loadPuzzle(skipConfirmation = false) {
     try {
+        // Clear any pending auto-load timeout
+        if (autoLoadTimeout) {
+            clearTimeout(autoLoadTimeout);
+            autoLoadTimeout = null;
+        }
+        
         showLoading();
         clearMessage();
         currentGuess = '';
@@ -320,6 +332,21 @@ async function handleSubmit() {
             showMessage(`🎉 Correct! The answer is "${answer}"`, 'success');
             submitBtn.disabled = true;
             deleteBtn.disabled = true;
+            
+            // Show "Loading new puzzle..." message after 2 seconds, then load after 3 seconds
+            if (autoLoadTimeout) {
+                clearTimeout(autoLoadTimeout);
+            }
+            
+            // Show loading message after 2 seconds
+            setTimeout(() => {
+                showMessage('riddle fiddle dee dee...', 'info');
+            }, 2000);
+            
+            // Auto-load new puzzle after 3 seconds (no confirmation needed)
+            autoLoadTimeout = setTimeout(() => {
+                loadPuzzle(true); // Skip confirmation for auto-load
+            }, 3000);
         } else {
             showMessage(data.message || 'Not quite right. Try again!', 'error');
             shakeAnswerRow();

@@ -37,10 +37,22 @@ def load_puzzles_from_csv():
                 answer = row['answer']
                 guesses_data = json.loads(row['guesses_json'])
                 
+                # Load valid answers (all words that satisfy constraints)
+                # For backwards compatibility, default to just the answer if not present
+                valid_answers_json = row.get('valid_answers_json', '')
+                if valid_answers_json:
+                    try:
+                        valid_answers = json.loads(valid_answers_json)
+                    except (json.JSONDecodeError, ValueError):
+                        valid_answers = [answer]
+                else:
+                    valid_answers = [answer]  # Default to just the answer for old CSV files
+                
                 puzzles_db.append({
                     'puzzle_id': puzzle_id,
                     'answer': answer,
-                    'guesses': guesses_data
+                    'guesses': guesses_data,
+                    'valid_answers': valid_answers
                 })
         
         app.logger.info(f"Loaded {len(puzzles_db)} puzzles from {PUZZLES_CSV}")
@@ -126,9 +138,10 @@ def get_puzzle():
         # Generate unique puzzle ID for this session
         puzzle_id = str(uuid.uuid4())
         
-        # Store puzzle answer server-side (don't trust client)
+        # Store puzzle answer and valid answers server-side (don't trust client)
         active_puzzles[puzzle_id] = {
             'answer': puzzle['answer'],
+            'valid_answers': puzzle.get('valid_answers', [puzzle['answer']]),  # All words that satisfy constraints
             'created_at': datetime.now(),
             'guesses': []
         }
@@ -196,6 +209,7 @@ def check_answer():
         
         puzzle_data = active_puzzles[puzzle_id]
         answer = puzzle_data['answer']
+        valid_answers = puzzle_data.get('valid_answers', [answer])
         
         # Track guess
         puzzle_data['guesses'].append({
@@ -203,8 +217,8 @@ def check_answer():
             'timestamp': datetime.now().isoformat()
         })
         
-        # Check if correct
-        correct = (guess == answer)
+        # Check if correct - accept any word that satisfies all constraints
+        correct = (guess.lower() in [a.lower() for a in valid_answers])
         
         response_data = {
             'correct': correct,
@@ -214,7 +228,8 @@ def check_answer():
         if correct:
             # Optionally clean up puzzle after correct answer
             # del active_puzzles[puzzle_id]
-            response_data['answer'] = answer.upper()
+            # Return the guessed word (which is a valid answer) in uppercase
+            response_data['answer'] = guess.upper()
         
         return jsonify(response_data)
         

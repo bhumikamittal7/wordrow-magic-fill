@@ -408,6 +408,7 @@ class PuzzleGenerator:
         best_guesses = []
         best_constraints_list = []
         best_candidates_remaining = len(self.words)
+        best_final_candidates = []
         
         # Pre-select candidate guesses based on frequency scores
         # Use top-scoring words + some diversity
@@ -522,7 +523,8 @@ class PuzzleGenerator:
                 result = {
                     'answer': answer,
                     'guesses': guesses,
-                    'constraints': []
+                    'constraints': [],
+                    'valid_answers': [answer]  # Unique puzzle, only one valid answer
                 }
                 
                 for i, guess in enumerate(guesses):
@@ -545,6 +547,7 @@ class PuzzleGenerator:
                 best_candidates_remaining = len(final_candidates)
                 best_guesses = guesses.copy()
                 best_constraints_list = [c.copy() for c in constraints_list]
+                best_final_candidates = final_candidates.copy()  # Store the actual candidates
         
         # If we couldn't find a perfect puzzle, return the best attempt
         if best_guesses:
@@ -568,6 +571,13 @@ class PuzzleGenerator:
                 })
             
             result['candidates_remaining'] = best_candidates_remaining
+            # Store all valid answers (candidates that satisfy all constraints)
+            if best_candidates_remaining > 1:
+                result['valid_answers'] = best_final_candidates
+            else:
+                # For unique puzzles, valid_answers is just the answer
+                result['valid_answers'] = [answer]
+            
             return result
         
         raise RuntimeError(f"Could not generate puzzle for '{answer}' after {max_attempts} attempts")

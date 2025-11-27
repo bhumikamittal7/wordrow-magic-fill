@@ -40,7 +40,8 @@ def generate_puzzles_csv(output_file='puzzles.csv', num_puzzles=30, use_curated=
                         'constraints': puzzle['constraints'][j]['constraints'] if j < len(puzzle['constraints']) else []
                     }
                     for j in range(4)
-                ])
+                ]),
+                'valid_answers_json': json.dumps(puzzle.get('valid_answers', [puzzle['answer']]))
             }
             
             puzzles.append(puzzle_data)
@@ -55,7 +56,8 @@ def generate_puzzles_csv(output_file='puzzles.csv', num_puzzles=30, use_curated=
     fieldnames = [
         'puzzle_id',
         'answer',
-        'guesses_json'
+        'guesses_json',
+        'valid_answers_json'
     ]
     
     with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:

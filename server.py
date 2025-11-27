@@ -182,6 +182,9 @@ def get_puzzle():
 def check_answer():
     """Check if a user's guess is correct."""
     try:
+        # Clean up old puzzles before checking (so expired puzzles are removed)
+        cleanup_old_puzzles()
+        
         if not request.is_json:
             return jsonify({'correct': False, 'message': 'Invalid request format'}), 400
         
